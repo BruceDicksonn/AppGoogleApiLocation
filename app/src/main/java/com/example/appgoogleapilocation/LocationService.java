@@ -37,6 +37,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 @SuppressLint("MissingPermission")
@@ -49,15 +51,6 @@ public class LocationService extends Service {
     LocationRequest locationRequest;
     LocationSettingsRequest locationSettings;
 
-    /**
-     * This is the callback that holds the locations received by the api,
-     * its implementation is of paramount importance when we want to stay
-     * continually checking the user's location;
-     * <p>
-     * Esse é o callback que detém as localizações recebidas pela api,
-     * sua implementação é de suma importancia quando queremos ficar
-     * checando continuamente a localização do usuário;
-     **/
     LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -72,10 +65,13 @@ public class LocationService extends Service {
                 MainActivity.listLocations.add(String.format("%f, %f", latitude, longitude));
                 MainActivity.refreshListLocation();
 
-                Log.e("ServicoLocalizacao", String.format("Latitude: %f Longitude: %f", latitude, longitude));
+                Log.e("Location Service", String.format("Latitude: %f Longitude: %f", latitude, longitude));
             }
         }
     };
+
+    int notification_id = 9999;
+    String channel_id = "LocationService";
 
     @Nullable
     @Override
@@ -87,23 +83,7 @@ public class LocationService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        /**
-
-         We start the client using LocalizationServices class holder of the all
-         services/providers related to location
-
-         Iniciamos o client usando a classe LocationServices detentora de todos
-         os servicos/providers relacionados a localização.
-         * **/
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
-
-        /**
-
-         locationRequest is an important item, as it dictates how requests will be made, how long, etc...
-
-         O request é um item importante, pois ele é quem dita como as requisições serão
-         feitas, de quanto em quanto tempo e etc ...
-         * **/
         locationRequest = new LocationRequest.Builder(1000)
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .build();
@@ -114,23 +94,6 @@ public class LocationService extends Service {
 
     private void initializeConfigurationLocation() {
 
-        /**
-         *
-         Receive location settings
-
-         These settings serve to verify that all permissions and settings granted by the user
-         meet the standard we desire. (high precision and allows foreground capture)
-
-         This way, we can check if they are valid and if they are not, we send a proper exception.
-
-         Receber configuracoes de localização
-
-         Essas configurações servem para verificarmos se todas as permissões e configuracoes
-         dadas pelo usuário atendem ao padrão que queremos. (alta precisão e permitir captura em segundo plano)
-
-         Assim, conseguimos checar se as mesmas estão válidas e se não estiverem, enviamos uma
-         exception adequada;
-         * **/
         locationSettings = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest).build();
 
         SettingsClient settingsClient = LocationServices.getSettingsClient(context);
@@ -173,10 +136,6 @@ public class LocationService extends Service {
         });
 
     }
-
-
-    int notification_id = 9999;
-    String channel_id = "LocationService";
 
     private void createNotificationChannel() {
 
